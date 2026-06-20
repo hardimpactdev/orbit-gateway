@@ -1,0 +1,17 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 5
+    paths:
+        - app
+        - config
+        - database
+    tmpDir: build/phpstan
+    bootstrapFiles:
+        - bootstrap/phpstan.php
+    checkModelProperties: true
+    treatPhpDocTypesAsCertain: false
+    parallel:
+        maximumNumberOfProcesses: 10
+        jobSize: 5
