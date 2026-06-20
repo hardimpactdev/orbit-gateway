@@ -1,0 +1,183 @@
+{
+    "$schema": "https://getcomposer.org/schema.json",
+    "name": "hardimpactdev/orbit-gateway",
+    "type": "project",
+    "description": "Orbit gateway Laravel control plane.",
+    "keywords": [
+        "laravel",
+        "orbit",
+        "gateway",
+        "control-plane"
+    ],
+    "license": "MIT",
+    "require": {
+        "beyondcode/polyscope": "^1.0",
+        "hardimpactdev/librarian": "^0.0.2",
+        "hardimpactdev/opencode-sdk-laravel": "^0.0.7",
+        "hardimpactdev/orbit-core": "0.1.146",
+        "laravel/framework": "^13.0",
+        "laravel/tinker": "^3.0",
+        "php": "^8.5",
+        "saloonphp/saloon": "^4.0",
+        "spatie/laravel-activitylog": "^4.0"
+    },
+    "require-dev": {
+        "fakerphp/faker": "^1.23",
+        "larastan/larastan": "^3.0",
+        "laravel/boost": "^2.4",
+        "laravel/pail": "^1.2.5",
+        "laravel/pao": "^1.0.6",
+        "laravel/pint": "^1.27",
+        "mockery/mockery": "^1.6",
+        "nunomaduro/collision": "^8.6",
+        "pestphp/pest": "^4.6",
+        "pestphp/pest-plugin-laravel": "^4.1",
+        "phpunit/phpunit": "^12.5.12",
+        "rector/rector": "^2.3",
+        "spatie/guidelines-skills": "dev-main"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\E2E\\Support\\": "../e2e/app/E2E/Support/",
+            "App\\": "app/",
+            "Database\\Factories\\": "database/factories/",
+            "Database\\Seeders\\": "database/seeders/"
+        },
+        "files": [
+            "app/Support/repository.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        },
+        "exclude-from-classmap": [
+            "/tests/"
+        ],
+        "files": [
+            "tests/Helpers/E2EEnvironment.php"
+        ]
+    },
+    "scripts": {
+        "setup": [
+            "composer install",
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
+            "@php artisan key:generate",
+            "@php artisan migrate --force",
+            "npm install --ignore-scripts",
+            "npm run build"
+        ],
+        "dev": [
+            "Composer\\Config::disableProcessTimeout",
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
+        ],
+        "test": [
+            "Composer\\Config::disableProcessTimeout",
+            "@php artisan config:clear --ansi @no_additional_args",
+            "@php -d memory_limit=512M vendor/pestphp/pest/bin/pest --exclude-group=e2e --exclude-group=slow --parallel --compact"
+        ],
+        "test:slow": [
+            "Composer\\Config::disableProcessTimeout",
+            "@php artisan config:clear --ansi @no_additional_args",
+            "@php -d memory_limit=512M vendor/pestphp/pest/bin/pest --exclude-group=e2e --parallel --compact"
+        ],
+        "test:e2e": [
+            "Composer\\Config::disableProcessTimeout",
+            "set -a; [ ! -f ../../.env.e2e ] || . ../../.env.e2e; set +a; php artisan e2e:test @additional_args"
+        ],
+        "test:e2e:docker": [
+            "Composer\\Config::disableProcessTimeout",
+            "set -a; [ ! -f ../../.env.e2e ] || . ../../.env.e2e; set +a; ORBIT_E2E_LANES=docker php artisan e2e:test @additional_args"
+        ],
+        "test:e2e:docker:canary": [
+            "Composer\\Config::disableProcessTimeout",
+            "set -a; [ ! -f ../../.env.e2e ] || . ../../.env.e2e; set +a; ORBIT_E2E_LANES=docker php artisan e2e:test --canary @additional_args"
+        ],
+        "test:e2e:incus": [
+            "Composer\\Config::disableProcessTimeout",
+            "set -a; [ ! -f ../../.env.e2e ] || . ../../.env.e2e; set +a; ORBIT_E2E_LANES=incus php artisan e2e:test @additional_args"
+        ],
+        "test:e2e:topology-contract": [
+            "Composer\\Config::disableProcessTimeout",
+            "set -a; [ ! -f ../../.env.e2e ] || . ../../.env.e2e; set +a; ORBIT_E2E=1 ORBIT_E2E_TOPOLOGY_PROVIDER=docker php artisan test --testsuite=E2E --group=e2e-topology-contract-operator_gateway_app-dev_app-prod_agent_websocket --fail-on-empty-test-suite @additional_args"
+        ],
+        "test:e2e:provision": [
+            "Composer\\Config::disableProcessTimeout",
+            "set -a; [ ! -f ../../.env.e2e ] || . ../../.env.e2e; set +a; ORBIT_E2E=1 php artisan test --testsuite=E2E --group=e2e-provision --fail-on-empty-test-suite @additional_args"
+        ],
+        "e2e:preflight": "set -a; [ ! -f ../../.env.e2e ] || . ../../.env.e2e; set +a; php artisan e2e:preflight @additional_args",
+        "e2e:reap-incus": "set -a; [ ! -f ../../.env.e2e ] || . ../../.env.e2e; set +a; php artisan e2e:reap-incus @additional_args",
+        "e2e:reap-docker": "set -a; [ ! -f ../../.env.e2e ] || . ../../.env.e2e; set +a; php artisan e2e:reap-docker @additional_args",
+        "e2e:prepare-docker-runtime": [
+            "Composer\\Config::disableProcessTimeout",
+            "set -a; [ ! -f ../../.env.e2e ] || . ../../.env.e2e; set +a; php artisan e2e:prepare-docker-runtime @additional_args"
+        ],
+        "e2e:prepare-docker-topology": [
+            "Composer\\Config::disableProcessTimeout",
+            "set -a; [ ! -f ../../.env.e2e ] || . ../../.env.e2e; set +a; php artisan e2e:prepare-docker-topology @additional_args"
+        ],
+        "e2e:prepare-docker-hosts": [
+            "Composer\\Config::disableProcessTimeout",
+            "set -a; [ ! -f ../../.env.e2e ] || . ../../.env.e2e; set +a; php artisan e2e:prepare-docker-hosts @additional_args"
+        ],
+        "e2e:prepare-base-image": [
+            "Composer\\Config::disableProcessTimeout",
+            "set -a; [ ! -f ../../.env.e2e ] || . ../../.env.e2e; set +a; php artisan e2e:prepare-base-image @additional_args"
+        ],
+        "e2e:prepare-topology": [
+            "Composer\\Config::disableProcessTimeout",
+            "set -a; [ ! -f ../../.env.e2e ] || . ../../.env.e2e; set +a; php artisan e2e:prepare-topology @additional_args"
+        ],
+        "e2e:prepare-warm-topology": [
+            "Composer\\Config::disableProcessTimeout",
+            "set -a; [ ! -f ../../.env.e2e ] || . ../../.env.e2e; set +a; php artisan e2e:prepare-warm-topology @additional_args"
+        ],
+        "analyse": "vendor/bin/phpstan analyse --memory-limit=512M",
+        "format": "vendor/bin/pint",
+        "rector": "vendor/bin/rector process",
+        "quality-check": [
+            "Composer\\Config::disableProcessTimeout",
+            "../../bin/quality-check.sh"
+        ],
+        "quality-check:fix": [
+            "Composer\\Config::disableProcessTimeout",
+            "../../bin/quality-check.sh --fix"
+        ],
+        "post-autoload-dump": [
+            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+            "@php artisan package:discover --ansi"
+        ],
+        "post-update-cmd": [
+            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
+        ],
+        "post-root-package-install": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+        ],
+        "post-create-project-cmd": [
+            "@php artisan key:generate --ansi",
+            "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
+            "@php artisan migrate --graceful --ansi"
+        ],
+        "pre-package-uninstall": [
+            "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "dont-discover": []
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true,
+            "rector/rector": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "version": "0.1.146"
+}
